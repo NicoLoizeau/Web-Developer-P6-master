@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('../cluster');
 const uniqueValidator = require('mongoose-unique-validator');
 
 const userModel = mongoose.Schema({
