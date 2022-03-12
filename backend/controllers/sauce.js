@@ -1,5 +1,4 @@
 const { json } = require("body-parser");
-//const app = require("../app");
 const Sauce = require('../models/modelSauce');
 const fs = require('fs');
 
@@ -67,26 +66,35 @@ exports.deleted = (req, res, next) => {
         .catch(error => res.status(500).json({ error }));
 };
 exports.like = (req, res, next) => {
+
     Sauce.findOne({ _id: req.params.id })
         .then(Sauce => {
-            if (req.body.like === 1) {
-                Sauce.usersLiked.push(req.body.userId);
-                Sauce.likes += 1;
-            } else if (req.body.like === -1) {
-                Sauce.usersDisliked.push(req.body.userId);
-                Sauce.dislikes += 1;
-            }
             let usersLikedIndex = Sauce.usersLiked.findIndex(user => user === req.body.userId);
             let usersDislikedIndex = Sauce.usersDisliked.findIndex(user => user === req.body.userId);
-            if (req.body.like === 0 && usersLikedIndex != -1) {
+            if (req.body.like === 1 /*&& usersLikedIndex === -1*/) {
+                Sauce.usersLiked.push(req.body.userId);
+                Sauce.likes += 1;
+                console.log('ok1');
+
+            } else if (req.body.like === -1 && usersDislikedIndex === -1) {
+                Sauce.usersDisliked.push(req.body.userId);
+                Sauce.dislikes += 1;
+                console.log('ok2');
+
+            } else if (req.body.like === 0 && usersLikedIndex != -1) {
                 console.log(usersLikedIndex);
                 Sauce.usersLiked.splice(usersLikedIndex, 1);
                 Sauce.likes -= 1;
+                console.log('ok3');
+
             } else if (req.body.like === 0 && usersDislikedIndex != -1) {
                 console.log(usersDislikedIndex);
                 Sauce.usersDisliked.splice(usersDislikedIndex, 1);
                 Sauce.dislikes -= 1;
-            }
+                console.log('ok4');
+
+            } else console.log('non');
+
             Sauce.save();
             res.status(201).json({ message: 'Like mise à jour' });
         })

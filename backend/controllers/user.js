@@ -13,7 +13,7 @@ exports.signup = (req, res, next) => {
             });
             user.save()
                 .then(() => res.status(201).json({ message: 'utilisateur créé' }))
-                .catch(() => res.status(400).json({ error }));/// revoir le message d'erreur si doublon user
+                .catch(() => res.status(400).json({ message: 'Cette adresse mail existe déjà !' }));
         })
         .catch(error => {
             console.log(error)
