@@ -11,7 +11,6 @@ exports.findOne = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
         .then(sauces => res.status(200).json(sauces))
         .catch(error => res.status(404).json({ error }));
-
 };
 exports.insert = (req, res, next) => {
     const sauceObject = JSON.parse(req.body.sauce);
@@ -24,33 +23,28 @@ exports.insert = (req, res, next) => {
         usersDisliked: [],
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
-    console.log(sauceObject)
-
     sauce.save()
         .then(() => res.status(201).json({ message: 'sauce créée !' }))
         .catch(error => res.status(400).json({ error }))
-    console.log(sauce);
 };
 exports.modify = (req, res, next) => {
-
     Sauce.findOne({ _id: req.params.id })
-    if (req.file) {
-        Sauce.findOne({ _id: req.params.id })
-            .then(Sauce => {
-                const filename = Sauce.imageUrl.split('/images/')[1];
+        .then(sauce => {
+            const filename = sauce.imageUrl.split('/images/')[1];
+            if (req.file.filename != filename) {
                 fs.unlink(`images/${filename}`, (err) => {
                     if (err) throw err;
-                });
-            })
-            .catch(error => res.status(400).json({ error }));
-    }
-    const sauceObject = req.file ?
-        {
-            ...JSON.parse(req.body.sauce),
-            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-        } : { ...req.body };
-    Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Sauce modifiée' }))
+                })
+            }
+            const sauceObject = req.file ?
+                {
+                    ...JSON.parse(req.body.sauce),
+                    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+                } : { ...req.body };
+            Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+                .then(() => res.status(200).json({ message: 'Sauce modifiée' }))
+                .catch(error => res.status(400).json({ error }));
+        })
         .catch(error => res.status(400).json({ error }));
 };
 exports.deleted = (req, res, next) => {
@@ -68,34 +62,30 @@ exports.deleted = (req, res, next) => {
 exports.like = (req, res, next) => {
 
     Sauce.findOne({ _id: req.params.id })
-        .then(Sauce => {
-            let usersLikedIndex = Sauce.usersLiked.findIndex(user => user === req.body.userId);
-            let usersDislikedIndex = Sauce.usersDisliked.findIndex(user => user === req.body.userId);
-            if (req.body.like === 1 /*&& usersLikedIndex === -1*/) {
-                Sauce.usersLiked.push(req.body.userId);
-                Sauce.likes += 1;
-                console.log('ok1');
-
+        .then(result => {
+            let sauce = { ...JSON.parse(JSON.stringify(result)) }
+            if (!sauce.usersLiked) { sauce.usersLiked = [] }
+            if (!sauce.usersDisliked) { sauce.usersDisliked = [] }
+            let usersLikedIndex = sauce.usersLiked.findIndex(user => user === req.body.userId);
+            let usersDislikedIndex = sauce.usersDisliked.findIndex(user => user === req.body.userId);
+            if (req.body.like === 1 && usersLikedIndex === -1) {
+                sauce.usersLiked.push(req.body.userId);
+                sauce.likes += 1;
             } else if (req.body.like === -1 && usersDislikedIndex === -1) {
-                Sauce.usersDisliked.push(req.body.userId);
-                Sauce.dislikes += 1;
-                console.log('ok2');
-
+                sauce.usersDisliked.push(req.body.userId);
+                sauce.dislikes += 1;
             } else if (req.body.like === 0 && usersLikedIndex != -1) {
-                console.log(usersLikedIndex);
-                Sauce.usersLiked.splice(usersLikedIndex, 1);
-                Sauce.likes -= 1;
-                console.log('ok3');
-
+                sauce.usersLiked.splice(usersLikedIndex, 1);
+                sauce.likes -= 1;
             } else if (req.body.like === 0 && usersDislikedIndex != -1) {
-                console.log(usersDislikedIndex);
-                Sauce.usersDisliked.splice(usersDislikedIndex, 1);
-                Sauce.dislikes -= 1;
-                console.log('ok4');
+                sauce.usersDisliked.splice(usersDislikedIndex, 1);
+                sauce.dislikes -= 1;
+
 
             } else console.log('non');
 
-            Sauce.save();
-            res.status(201).json({ message: 'Like mise à jour' });
+            Sauce.updateOne({ _id: req.params.id }, { ...sauce, _id: req.params.id })
+                .then(() => res.status(201).json({ message: 'like sauce modifié' }))
+                .catch(error => res.status(400).json({ error }));
         })
 };
