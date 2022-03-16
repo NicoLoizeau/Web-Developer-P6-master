@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 
 
 exports.signup = (req, res, next) => {
-    console.log(req.body)
     bcrypt.hash(req.body.password, 10)
         .then(hash => {
             const user = new User({
@@ -16,7 +15,6 @@ exports.signup = (req, res, next) => {
                 .catch(() => res.status(400).json({ message: 'Cette adresse mail existe déjà !' }));
         })
         .catch(error => {
-            console.log(error)
             res.status(500).json({ message: 'Inscription impossible !' })
         });
 };

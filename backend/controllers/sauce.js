@@ -31,7 +31,7 @@ exports.modify = (req, res, next) => {
     Sauce.findOne({ _id: req.params.id })
         .then(sauce => {
             const filename = sauce.imageUrl.split('/images/')[1];
-            if (req.file.filename != filename) {
+            if (req.file) {
                 fs.unlink(`images/${filename}`, (err) => {
                     if (err) throw err;
                 })
@@ -60,7 +60,6 @@ exports.deleted = (req, res, next) => {
         .catch(error => res.status(500).json({ error }));
 };
 exports.like = (req, res, next) => {
-
     Sauce.findOne({ _id: req.params.id })
         .then(result => {
             let sauce = { ...JSON.parse(JSON.stringify(result)) }
@@ -80,10 +79,7 @@ exports.like = (req, res, next) => {
             } else if (req.body.like === 0 && usersDislikedIndex != -1) {
                 sauce.usersDisliked.splice(usersDislikedIndex, 1);
                 sauce.dislikes -= 1;
-
-
-            } else console.log('non');
-
+            } else;
             Sauce.updateOne({ _id: req.params.id }, { ...sauce, _id: req.params.id })
                 .then(() => res.status(201).json({ message: 'like sauce modifié' }))
                 .catch(error => res.status(400).json({ error }));
